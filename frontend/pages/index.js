@@ -111,7 +111,7 @@ export default function Generator() {
     
                 const combinedItemId = `${brandId}${itemId}${(i + 1).toString().padStart(6, '0')}`;
                 const jsonData = {
-                    name: `Showmee_ ${combinedItemId}`,
+                    name: `Showmee_${combinedItemId}`,
                     description: "This is showmee Test Nft",
                     image: `ipfs://${cid}.ipfs.nftstorage.link`,
                     dna: combinedItemId,
@@ -124,7 +124,7 @@ export default function Generator() {
                         { trait_type: "origin", value: itemOrigin },
                         { trait_type: "brandId", value: brandId },
                         { trait_type: "itemId", value: itemId },
-                        { trait_type: "combinedItemId", value: combinedItemId }
+                        { trait_type: "Item_code", value: combinedItemId }
                     ]
                 };
     

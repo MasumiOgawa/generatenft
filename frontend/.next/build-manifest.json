@@ -10,7 +10,14 @@
     "static/development/_buildManifest.js",
     "static/development/_ssgManifest.js"
   ],
+<<<<<<< HEAD
   "rootMainFiles": [],
+=======
+  "rootMainFiles": [
+    "static/chunks/webpack.js",
+    "static/chunks/main-app.js"
+  ],
+>>>>>>> 984ffe05ffa0135a675112638f65413aa71c3ca8
   "pages": {
     "/": [
       "static/chunks/webpack.js",

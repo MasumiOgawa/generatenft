@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 
 export default function Generator() {
     const [generatedImages, setGeneratedImages] = useState([]);
+    const [uploadedUrls, setUploadedUrls] = useState([]);
 
     async function createImageFromBlob(blob) {
         return new Promise((resolve) => {
@@ -85,62 +86,95 @@ export default function Generator() {
             throw new Error(`Error uploading file: ${errorData.error.message}`);
         }
     }
-
-    async function uploadImagesAndGenerateJson() {
-        if (generatedImages.length === 0) {
-            alert("先に画像を生成してください");
-            return;
-        }
-    
-        const brandId = document.getElementById('brandId').value.padStart(6, '0');
-        const itemId = document.getElementById('itemId').value.padStart(6, '0');
-        const brandName = document.getElementById('brandName').value;
-        const itemName = document.getElementById('itemName').value;
-        const itemColor = document.getElementById('itemColor').value;
-        const itemOrigin = document.getElementById('itemOrigin').value;
-        const numFiles = parseInt(document.getElementById('numFiles').value);
-        if (isNaN(numFiles) || numFiles <= 0 || numFiles > generatedImages.length) {
-            alert(`指定したNumは無効です。1から${generatedImages.length}の間の値を入力してください。`);
-            return;
-        }
-    
-        for (let i = 0; i < generatedImages.length; i++) {
-            try {
-                const cid = await uploadFileToNFTStorage(generatedImages[i]);
-                console.log(`Image ${i} CID:`, cid);
-    
-                const combinedItemId = `${brandId}${itemId}${(i + 1).toString().padStart(6, '0')}`;
-                const jsonData = {
-                    name: `Showmee_${combinedItemId}`,
-                    description: "This is showmee Test Nft",
-                    image: `ipfs://${cid}.ipfs.nftstorage.link`,
-                    dna: combinedItemId,
-                    edition: i + 1,
-                    date: Date.now(),
-                    attributes: [
-                        { trait_type: "brand", value: brandName },
-                        { trait_type: "item", value: itemName },
-                        { trait_type: "color", value: itemColor },
-                        { trait_type: "origin", value: itemOrigin },
-                        { trait_type: "brandId", value: brandId },
-                        { trait_type: "itemId", value: itemId },
-                        { trait_type: "Item_code", value: combinedItemId }
-                    ]
-                };
-    
-                const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'text/json' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `item_${combinedItemId}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-    
-            } catch (error) {
-                console.error(`Error processing image ${i}:`, error.message);
+        // async function downloadJson(jsonData, combinedItemId) {
+        //     const blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'text/json' });
+        //     const a = document.createElement('a');
+        //     a.href = URL.createObjectURL(blob);
+        //     a.download = `item_${combinedItemId}.json`;
+        //     document.body.appendChild(a);
+        //     a.click();
+        //     document.body.removeChild(a);
+        // }
+        async function uploadJsonToNFTStorage(jsonData) {
+            const apiEndpoint = "https://api.nft.storage/upload";
+            const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDA5OUZCNTk5MTFiMDVmNjk5MzBlNzJGN0VENzlENkJmODc1OTNFMkEiLCJpc3MiOiJuZnQtc3RvcmFnZSIsImlhdCI6MTY5NjA0NjIxMzU2NiwibmFtZSI6Ik5GVF9URVNUIn0.tcmpx4NdFaoQ7rsDzecGfdKW0fhidgOh4UpSIiATcI0";  // こちらをあなたのAPIキーに置き換えてください
+        
+            const response = await fetch(apiEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(jsonData)  // JSONデータを文字列化して指定
+            });
+        
+            if (response.ok) {
+                const resultData = await response.json();
+                const url = `ipfs://${resultData.value.cid}.ipfs.nftstorage.link`;  // URLを作成
+                return resultData.value.cid;  // CIDを返す
+            } else {
+                const errorData = await response.json();
+                throw new Error(`Error uploading JSON: ${errorData.error.message}`);
             }
         }
-    }
+        
+
+
+        async function uploadImagesAndGenerateJson() {
+            if (generatedImages.length === 0) {
+                alert("先に画像を生成してください");
+                return;
+            }
+        
+            const brandId = document.getElementById('brandId').value.padStart(6, '0');
+            const itemId = document.getElementById('itemId').value.padStart(6, '0');
+            const brandName = document.getElementById('brandName').value;
+            const itemName = document.getElementById('itemName').value;
+            const itemColor = document.getElementById('itemColor').value;
+            const itemOrigin = document.getElementById('itemOrigin').value;
+        
+            for (let i = 0; i < generatedImages.length; i++) {
+                try {
+                    const cid = await uploadFileToNFTStorage(generatedImages[i]);
+                    console.log(`Image ${i} CID:`, cid);
+                    
+        
+                    const combinedItemId = `${brandId}${itemId}${(i + 1).toString().padStart(6, '0')}`;
+                    const jsonData = {
+                        name: `Showmee_${combinedItemId}`,
+                        description: "This is showmee Test Nft",
+                        image: `ipfs://${cid}.ipfs.nftstorage.link`,
+                        dna: combinedItemId,
+                        edition: i + 1,
+                        date: Date.now(),
+                        attributes: [
+                            { trait_type: "brand", value: brandName },
+                            { trait_type: "item", value: itemName },
+                            { trait_type: "color", value: itemColor },
+                            { trait_type: "origin", value: itemOrigin },
+                            { trait_type: "brandId", value: brandId },
+                            { trait_type: "itemId", value: itemId },
+                            { trait_type: "Item_code", value: combinedItemId }
+                        ]
+                    };
+        
+                    // Here, we will upload the JSON to NFT Storage directly.
+                    await uploadJsonToNFTStorage(jsonData);
+
+                    const url = await uploadJsonToNFTStorage(jsonData);  // URLを取得
+                    setUploadedUrls(prevUrls => [...prevUrls, url]);  // URLをステートに保存
+            
+                    
+
+        
+                } catch (error) {
+                    console.error(`Error processing image ${i}:`, error.message);
+
+                }
+            }
+        }
+        
+        
 
     return (
         <div>
@@ -167,6 +201,7 @@ export default function Generator() {
             <div id="previewContainer">
                 {/* プレビュー画像はこちらに動的に追加されます */}
             </div>
+            
             <br />
             <label>ブランドID: <input type="text" maxLength="6" id="brandId" /></label><br />
             <label>アイテムID: <input type="text" maxLength="6" id="itemId" /></label><br />
@@ -177,6 +212,12 @@ export default function Generator() {
             <label>Num: <input type="number" id="numFiles" /></label><br />
             <button onClick={uploadImagesAndGenerateJson}>アップロード & JSON生成</button>
             <p id="cidOutput"></p>
+            <ul>
+                {uploadedUrls.map(url => (
+                    <li key={url}><a href={url} target="_blank" rel="noopener noreferrer">{url}</a></li>
+                ))}
+            </ul>
+
         </div>
     );
     }    
